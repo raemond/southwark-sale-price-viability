@@ -11,7 +11,7 @@ class EnergyPerformance
 
   def report
     return nil unless response.body.length.positive?
-    return nil unless response['rows'].count.positive?
+    return nil unless response['rows'].present?
 
     response['rows'][0]
   end
