@@ -1,18 +1,26 @@
 # frozen_string_literal: true
 
 class ImportProperties
-  include Singleton
   include HTTParty
   base_uri 'http://landregistry.data.gov.uk'
 
+  def initialize(district)
+    @district = district
+  end
+
   def perform
-    csv.each do |row|
+    count = csv.count
+    print "Importing #{@district}"
+    csv.each_with_index do |row, i|
+      $stdout.flush
+      print "\rImporting #{@district} (#{i + 1} of #{count})"
       Property.create_from_csv_row(row)
     end
+    puts "\r\n"
   end
 
   def csv
-    CSV.parse(response.body)
+    @csv ||= CSV.parse(response.body)
   end
 
   def response
@@ -21,7 +29,7 @@ class ImportProperties
 
   def query # rubocop:disable Metrics/MethodLength
     {
-      district: 'Southwark',
+      district: @district,
       et: estate_types,
       header: 'true',
       limit: 'all',
@@ -50,8 +58,7 @@ class ImportProperties
       'lrcommon:detached',
       'lrcommon:semi-detached',
       'lrcommon:terraced',
-      'lrcommon:flat-maisonette',
-      'lrcommon:otherPropertyType'
+      'lrcommon:flat-maisonette'
     ]
   end
 
